@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Controllers;
+use App\Core\View;
 
 class StoreController
 {
@@ -14,9 +15,12 @@ class StoreController
     public function index()
     {
         $stores = $this->storeRepository->getAll();
-        echo '<pre>';
-        print_r($stores);
-        exit;
+
+        $viewData = [
+            'stores' => $stores
+        ];
+
+        View::render('store/index', $viewData);
     }
     
 }
