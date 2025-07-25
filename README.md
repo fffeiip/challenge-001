@@ -128,6 +128,22 @@ http://localhost:8081/
 
 ---
 
+## 🔄 Reset the Database (Script)
+
+- To reset the database (recreate schema and seed data), open your browser and navigate to:
+```
+http://localhost:8080/reset_db.php
+```
+
+## 📄 Generate Weapon PDF (Script)
+
+- To generate a PDF for a specific weapon record, open your browser and go to:
+```
+http://localhost:8080/weapon.php?action=export&id=2
+```
+
+
+
 ## ✍️ Author
 
 Built by Shivrag Shukla as a pure PHP 7.2 technical challenge.
