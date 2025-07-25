@@ -27,9 +27,26 @@ class StoreRepository implements StoreRepositoryInterface
         // Will implement later
     }
 
-    public function create()
+    public function create(array $data): bool
     {
-       // Will implement later
+    $stmt = $this->pdo->prepare("
+        INSERT INTO stores (
+        name, slug, address_line1, address_line2, city, state_region, country, phone, email
+        ) VALUES (
+        :name, :slug, :address_line1, :address_line2, :city, :state_region, :country, :phone, :email
+        )
+    ");
+    return $stmt->execute([
+        'name' => $data['name'],
+        'slug' => $data['slug'],
+        'address_line1' => $data['address_line1'],
+        'address_line2' => $data['address_line2'],
+        'city' => $data['city'],
+        'state_region' => $data['state_region'],
+        'country' => $data['country'],
+        'phone' => $data['phone'],
+        'email' => $data['email']
+    ]);
     }
 
     public function update()
