@@ -105,6 +105,10 @@ class WeaponController
 
     public function delete($id)
     {
-        echo "Delete Weapon Logic for ID: $id";
+        $this->weaponRepository->delete($id);
+        session_start();
+        $_SESSION['success'] = 'Weapon deleted successfully!';
+        header('Location: weapon.php');
+        exit;
     }
 }

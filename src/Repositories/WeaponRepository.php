@@ -124,7 +124,8 @@ class WeaponRepository implements WeaponRepositoryInterface
 
     public function delete(int $id): bool
     {
-        return false; // Implementation for deleting a weapon
+        $stmt = $this->pdo->prepare("UPDATE weapons SET deleted_at = NOW() WHERE id = :id");
+        return $stmt->execute([':id' => $id]);
     }
 
     public function count(string $filter, string $status): int
