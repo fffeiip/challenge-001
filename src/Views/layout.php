@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title><?= $title ?? 'Home' ?> | Weapons Store App</title>
-    <link rel="stylesheet" href="./assets/styles.css">
+    <link rel="stylesheet" href="./assets/styles.css?v=1.0">
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
         nav a { margin-right: 10px; text-decoration: none; }
@@ -19,6 +19,7 @@
 
 <nav>
     <a href="/store.php" class="<?= strpos($_SERVER['SCRIPT_NAME'], 'store.php') !== false ? 'active' : '' ?>">Stores</a>
+    <a href="/weapon.php" class="<?= strpos($_SERVER['SCRIPT_NAME'], 'weapon.php') !== false ? 'active' : '' ?>">Weapon</a>
 </nav>
 
 <hr>
