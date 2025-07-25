@@ -66,12 +66,30 @@ class WeaponController
 
     public function edit($id)
     {
-        echo "Edit Weapon Form for ID: $id";
+        $weapon = $this->weaponRepository->find($id);
+        $stores = $this->weaponRepository->getAllStores();
+        View::render('weapon/edit', compact('weapon', 'stores'));
     }
 
     public function update($id)
     {
-        echo "Update Weapon Logic for ID: $id";
+        $validator = new WeaponRequestValidator($_POST);
+
+        if (!$validator->validate()) {
+            session_start();
+            $_SESSION['errors'] = $validator->errors();
+            $_SESSION['old'] = $validator->old();
+            header("Location: /weapon.php?action=edit&id=$id");
+            exit;
+        }
+
+        $data = $_POST;
+        $this->weaponRepository->update($id, $data);
+
+        session_start();
+        $_SESSION['success'] = 'Weapon updated successfully!';
+        header('Location: weapon.php');
+        exit;
     }
 
     public function show($id)

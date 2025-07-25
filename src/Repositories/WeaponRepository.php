@@ -97,7 +97,29 @@ class WeaponRepository implements WeaponRepositoryInterface
 
     public function update(int $id, array $data): bool
     {
-        return false; // Implementation for updating a weapon
+       $stmt = $this->pdo->prepare("
+            UPDATE weapons SET 
+            store_id = :store_id,
+            name = :name,
+            type = :type,
+            caliber = :caliber,
+            serial_number = :serial_number,
+            price = :price,
+            in_stock = :in_stock,
+            status = :status
+            WHERE id = :id
+        ");
+        return $stmt->execute([
+            ':store_id' => $data['store_id'],
+            ':name' => $data['name'],
+            ':type' => $data['type'],
+            ':caliber' => $data['caliber'],
+            ':serial_number' => $data['serial_number'],
+            ':price' => $data['price'],
+            ':in_stock' => $data['in_stock'],
+            ':status' => $data['status'],
+            ':id' => $id
+        ]);
     }
 
     public function delete(int $id): bool
