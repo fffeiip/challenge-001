@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Validators\StoreRequestValidator;
 use App\Helpers\SlugGenerator;
 use App\Core\View;
 
@@ -43,9 +44,20 @@ class StoreController
 
     public function store()
     {
+        $validator = new StoreRequestValidator($_POST);
+
+        if (!$validator->validate()) {
+            session_start();
+            $_SESSION['errors'] = $validator->errors();
+            $_SESSION['old'] = $validator->old();
+            header('Location: /store.php?action=create');
+            exit;
+        }
+
         $slug = SlugGenerator::generate($_POST['name']);
         $this->storeRepository->create(array_merge($_POST, ['slug' => $slug]));
-
+        
+        $_SESSION['success'] = 'Store created successfully!';
         header('Location: /store.php');
         exit;
     }
@@ -68,9 +80,20 @@ class StoreController
 
     public function update($id)
     {
+        $validator = new StoreRequestValidator($_POST);
+
+        if (!$validator->validate()) {
+            session_start();
+            $_SESSION['errors'] = $validator->errors();
+            $_SESSION['old'] = $validator->old();
+            header('Location: /store.php?action=edit&id=' . $id);
+            exit;
+        }
+
         $data = $_POST;
         $this->storeRepository->update($id, $data);
-
+        session_start();
+        $_SESSION['success'] = 'Store updated successfully!';
         header('Location: /store.php');
         exit;
     }
@@ -78,6 +101,8 @@ class StoreController
     public function delete($id)
     {
         $this->storeRepository->delete($id);
+        session_start();
+        $_SESSION['success'] = 'Store deleted successfully!';
         header('Location: /store.php');
         exit;
     }
