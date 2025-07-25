@@ -53,6 +53,10 @@ class StoreController
     public function show($id)
     {
         $store = $this->storeRepository->find($id);
+        if (!$store) {
+            View::render('404'); 
+            return;
+        }
         View::render('store/show', compact('store'));
     }
 

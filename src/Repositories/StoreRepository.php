@@ -28,12 +28,13 @@ class StoreRepository implements StoreRepositoryInterface
         $order = strtolower($order) === 'desc' ? 'DESC' : 'ASC';
 
         $query = "SELECT * FROM stores WHERE 
-            name LIKE :filter OR 
+            (name LIKE :filter OR 
             email LIKE :filter OR 
             phone LIKE :filter OR 
             city LIKE :filter OR 
             state_region LIKE :filter OR 
-            country LIKE :filter 
+            country LIKE :filter)
+            AND deleted_at IS NULL
             ORDER BY $sort $order 
             LIMIT :offset, :limit";
         
@@ -57,7 +58,7 @@ class StoreRepository implements StoreRepositoryInterface
 
     public function find(int $id): ?array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM stores WHERE id = :id");
+        $stmt = $this->pdo->prepare("SELECT * FROM stores WHERE deleted_at IS NULL AND id = :id");
         $stmt->execute(['id' => $id]);
         $store = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($store) {
@@ -117,7 +118,7 @@ class StoreRepository implements StoreRepositoryInterface
 
     public function delete(int $id): bool
     {
-        $stmt = $this->pdo->prepare("DELETE FROM stores WHERE id = :id");
+        $stmt = $this->pdo->prepare("UPDATE stores SET deleted_at = NOW() WHERE id = :id");
         return $stmt->execute(['id' => $id]);
     }
     
@@ -136,7 +137,14 @@ class StoreRepository implements StoreRepositoryInterface
     
     public function count(string $filter): int
     {
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM stores WHERE name LIKE :filter");
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM stores WHERE 
+            (name LIKE :filter OR 
+            email LIKE :filter OR 
+            phone LIKE :filter OR 
+            city LIKE :filter OR 
+            state_region LIKE :filter OR 
+            country LIKE :filter)
+            AND deleted_at IS NULL");
         $stmt->execute([':filter' => "%$filter%"]);
         return (int) $stmt->fetchColumn();
     }
