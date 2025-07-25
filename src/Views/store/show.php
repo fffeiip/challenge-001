@@ -37,6 +37,9 @@
                 <ul class="weapon-list">
                     <?php foreach ($store['weapons'] as $weapon): ?>
                         <li>
+                            <?php if ($weapon['deleted_at']): ?>
+                                <span class="deleted">[Deleted]</span>
+                            <?php endif; ?>
                             <a href="weapon.php?action=show&id=<?= $weapon['id'] ?>">
                                 <?= htmlspecialchars($weapon['name']) ?>
                             </a>
