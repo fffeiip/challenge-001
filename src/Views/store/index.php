@@ -29,7 +29,9 @@
                         <td><?= htmlspecialchars($store['country']) ?></td>
                         <td><?= date('F j, Y', strtotime($store['created_at'])) ?></td>
                         <td>
-                            <a href="store.php?action=show&id=<?= $store['id'] ?>">View</a> | Edit | Delete
+                            <a href="store.php?action=show&id=<?= $store['id'] ?>">View</a> | 
+                            <a href="store.php?action=edit&id=<?= $store['id'] ?>">Edit</a> | 
+                            Delete
                         </td>
                     </tr>
                 <?php endforeach; ?>

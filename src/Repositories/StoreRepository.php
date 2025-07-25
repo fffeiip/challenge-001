@@ -55,9 +55,31 @@ class StoreRepository implements StoreRepositoryInterface
     ]);
     }
 
-    public function update()
+     public function update(int $id, array $data): bool
     {
-        // Will implement later
+        $stmt = $this->pdo->prepare("
+            UPDATE stores SET
+            name = :name,
+            address_line1 = :address_line1,
+            address_line2 = :address_line2,
+            city = :city,
+            state_region = :state_region,
+            country = :country,
+            phone = :phone,
+            email = :email
+            WHERE id = :id
+        ");
+        return $stmt->execute([
+            'id' => $id,
+            'name' => $data['name'],
+            'address_line1' => $data['address_line1'],
+            'address_line2' => $data['address_line2'],
+            'city' => $data['city'],
+            'state_region' => $data['state_region'],
+            'country' => $data['country'],
+            'phone' => $data['phone'],
+            'email' => $data['email']
+        ]);
     }
 
     public function delete()

@@ -44,5 +44,20 @@ class StoreController
         $store = $this->storeRepository->find($id);
         View::render('store/show', compact('store'));
     }
+
+    public function edit($id)
+    {
+        $store = $this->storeRepository->find($id);
+        View::render('store/edit', compact('store'));
+    }
+
+    public function update($id)
+    {
+        $data = $_POST;
+        $this->storeRepository->update($id, $data);
+
+        header('Location: /store.php');
+        exit;
+    }
     
 }
