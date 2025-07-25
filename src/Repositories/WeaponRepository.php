@@ -71,7 +71,19 @@ class WeaponRepository implements WeaponRepositoryInterface
 
     public function create(array $data): bool
     {
-        return false; // Implementation for creating a new weapon
+        $stmt = $this->pdo->prepare("
+            INSERT INTO weapons (store_id, name, type, caliber, serial_number, price, in_stock)
+            VALUES (:store_id, :name, :type, :caliber, :serial_number, :price, :in_stock)
+        ");
+        return $stmt->execute([
+            ':store_id' => $data['store_id'],
+            ':name' => $data['name'],
+            ':type' => $data['type'],
+            ':caliber' => $data['caliber'],
+            ':serial_number' => $data['serial_number'],
+            ':price' => $data['price'],
+            ':in_stock' => $data['in_stock']
+        ]);
     }
 
     public function update(int $id, array $data): bool
@@ -106,5 +118,9 @@ class WeaponRepository implements WeaponRepositoryInterface
 
         $stmt->execute();
         return (int) $stmt->fetchColumn();
+    }
+    public function getAllStores(): array
+    {
+        return $this->pdo->query("SELECT id, name FROM stores WHERE deleted_at IS NULL")->fetchAll(PDO::FETCH_ASSOC);
     }
 }

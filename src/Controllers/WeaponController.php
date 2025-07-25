@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Validators\WeaponRequestValidator;
 use App\Repositories\WeaponRepository;
 use App\Core\View;
 
@@ -39,12 +40,28 @@ class WeaponController
 
     public function create()
     {
-        echo "Create Weapon Form";
+        $stores = $this->weaponRepository->getAllStores();
+        View::render('weapon/create', ['stores' => $stores]);
     }
 
     public function store()
     {
-        echo "Store Weapon Logic";
+         $validator = new WeaponRequestValidator($_POST);
+
+        if (!$validator->validate()) {
+            session_start();
+            $_SESSION['errors'] = $validator->errors();
+            $_SESSION['old'] = $validator->old();
+            header('Location: /weapon.php?action=create');
+            exit;
+        }
+        $data = $_POST;
+        $this->weaponRepository->create($data);
+    
+        session_start();
+        $_SESSION['success'] = 'Weapon created successfully!';
+        header('Location: weapon.php');
+        exit;
     }
 
     public function edit($id)

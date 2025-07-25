@@ -56,7 +56,7 @@ class StoreController
 
         $slug = SlugGenerator::generate($_POST['name']);
         $this->storeRepository->create(array_merge($_POST, ['slug' => $slug]));
-        
+        session_start();
         $_SESSION['success'] = 'Store created successfully!';
         header('Location: /store.php');
         exit;

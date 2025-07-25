@@ -10,5 +10,6 @@ interface WeaponRepositoryInterface
     public function update(int $id, array $data): bool;
     public function delete(int $id): bool;
     public function count(string $filter, string $status): int;
-    
+    public function getAllStores(): array;
+
 }
