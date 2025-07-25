@@ -16,10 +16,21 @@ class StoreController
 
     public function index()
     {
-        $stores = $this->storeRepository->getAll();
+        $page = $_GET['page'] ?? 1;
+        $sort = $_GET['sort'] ?? 'name';
+        $order = $_GET['order'] ?? 'asc';
+        $filter = trim($_GET['filter'] ?? '');
+
+        $stores = $this->storeRepository->getAll($page, $sort, $order, $filter);
 
         $viewData = [
-            'stores' => $stores
+            'stores' => $stores['data'],
+            'total' => $stores['total'],
+            'page' => $page,
+            'sort' => $sort,
+            'order' => $order,
+            'filter' => $filter,
+            'perPage' => $stores['perPage'] ?? 10
         ];
 
         View::render('store/index', $viewData);
