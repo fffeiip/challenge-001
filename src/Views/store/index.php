@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Stores</title>
-</head>
-<body>
+<?php ob_start(); ?>
+
+    <a href="store.php?action=create">+ Add New Store</a>
 
     <table>
         <thead>
@@ -29,7 +25,7 @@
                         <td><?= htmlspecialchars($store['email']) ?></td>
                         <td><?= htmlspecialchars($store['phone']) ?></td>
                         <td><?= htmlspecialchars($store['city']) ?></td>
-                        <td><?= htmlspecialchars($store['state']) ?></td>
+                        <td><?= htmlspecialchars($store['state_region']) ?></td>
                         <td><?= htmlspecialchars($store['country']) ?></td>
                         <td><?= date('F j, Y', strtotime($store['created_at'])) ?></td>
                         <td>
@@ -41,6 +37,7 @@
         </tbody>
     </table>
 
-</body>
-</html>
-
+<?php
+$content = ob_get_clean();
+$title = "Stores";
+include __DIR__ . '/../layout.php';
