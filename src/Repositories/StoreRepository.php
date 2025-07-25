@@ -82,9 +82,10 @@ class StoreRepository implements StoreRepositoryInterface
         ]);
     }
 
-    public function delete()
+    public function delete(int $id): bool
     {
-        // Will implement later
+        $stmt = $this->pdo->prepare("DELETE FROM stores WHERE id = :id");
+        return $stmt->execute(['id' => $id]);
     }
     
     public function getWeapons(int $storeId): ?array

@@ -59,5 +59,12 @@ class StoreController
         header('Location: /store.php');
         exit;
     }
+
+    public function delete($id)
+    {
+        $this->storeRepository->delete($id);
+        header('Location: /store.php');
+        exit;
+    }
     
 }

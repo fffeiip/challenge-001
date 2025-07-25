@@ -31,7 +31,9 @@
                         <td>
                             <a href="store.php?action=show&id=<?= $store['id'] ?>">View</a> | 
                             <a href="store.php?action=edit&id=<?= $store['id'] ?>">Edit</a> | 
-                            Delete
+                            <form method="post" action="store.php?action=delete&id=<?= $store['id'] ?>" class="inline" onsubmit="return confirm('Delete this store?')">
+                                <button type="submit">Delete</button>
+                            </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>
