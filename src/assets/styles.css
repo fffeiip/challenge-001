@@ -60,6 +60,10 @@ button, .btn {
 .btn:hover {
     background-color: #444bb3;
 }
+.btn.clear {
+    background-color: #e74c3c;
+    padding: 10px 20px;
+}
 
 /* Table Styles */
 table {
