@@ -1,8 +1,8 @@
 # Ignore Composer dependencies
-/vendor/
+**/vendor/
 
 # Ignore Node modules
-/node_modules/
+**/node_modules/
 
 # Ignore system files
 .DS_Store
@@ -12,9 +12,8 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Ignore logs and env
+# Ignore logs
 *.log
-.env
 
 # Ignore Composer lock file if preferred
 composer.lock
