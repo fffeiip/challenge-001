@@ -15,11 +15,44 @@ class StoreRepository implements StoreRepositoryInterface
         $this->pdo = Database::getInstance()->getConnection();
     }
 
-    public function getAll(): array
+    public function getAll(int $page, string $sort, string $order, string $filter): array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM stores");
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+
+        $allowedSort = ['name', 'email', 'phone', 'city', 'state', 'country', 'created_at'];
+        if (!in_array($sort, $allowedSort)) {
+            $sort = 'name';
+        }
+
+        $order = strtolower($order) === 'desc' ? 'DESC' : 'ASC';
+
+        $query = "SELECT * FROM stores WHERE 
+            name LIKE :filter OR 
+            email LIKE :filter OR 
+            phone LIKE :filter OR 
+            city LIKE :filter OR 
+            state_region LIKE :filter OR 
+            country LIKE :filter 
+            ORDER BY $sort $order 
+            LIMIT :offset, :limit";
+        
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(':filter', "%$filter%", PDO::PARAM_STR);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
         $stmt->execute();
-        return $stores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Get total count for pagination
+        $total = $this->count($filter);
+
+        return [
+            'data' => $data,
+            'total' => (int)$total,
+            'perPage' => $perPage
+        ];
     }
 
     public function find(int $id): ?array
@@ -99,5 +132,12 @@ class StoreRepository implements StoreRepositoryInterface
         $stmt->bindValue(':store_id', $storeId, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    public function count(string $filter): int
+    {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM stores WHERE name LIKE :filter");
+        $stmt->execute([':filter' => "%$filter%"]);
+        return (int) $stmt->fetchColumn();
     }
 }
