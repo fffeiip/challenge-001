@@ -66,7 +66,16 @@ class WeaponRepository implements WeaponRepositoryInterface
 
     public function find(int $id): ?array
     {
-        return null; // Implementation for finding a weapon by ID
+        $stmt = $this->pdo->prepare("SELECT * FROM weapons WHERE deleted_at IS NULL AND id = ?");
+        $stmt->execute([$id]);
+        $weapon = $stmt->fetch();
+        if ($weapon) {
+            $store = $this->getStore($weapon['store_id']);
+            $weapon['store_id'] = $store['id'];
+            $weapon['store_name'] = $store['name'];
+        }
+
+        return $weapon ?: null;
     }
 
     public function create(array $data): bool
@@ -119,8 +128,16 @@ class WeaponRepository implements WeaponRepositoryInterface
         $stmt->execute();
         return (int) $stmt->fetchColumn();
     }
+
     public function getAllStores(): array
     {
         return $this->pdo->query("SELECT id, name FROM stores WHERE deleted_at IS NULL")->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getStore(int $storeId): ?array
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM stores WHERE id = ?");
+        $stmt->execute([$storeId]);
+        return $stmt->fetch();
     }
 }

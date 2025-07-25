@@ -37,7 +37,9 @@
                 <ul class="weapon-list">
                     <?php foreach ($store['weapons'] as $weapon): ?>
                         <li>
-                            <?= htmlspecialchars($weapon['name']) ?>
+                            <a href="weapon.php?action=show&id=<?= $weapon['id'] ?>">
+                                <?= htmlspecialchars($weapon['name']) ?>
+                            </a>
                             <span class="weapon-type">(<?= htmlspecialchars($weapon['type']) ?>)</span>
                         </li>
                     <?php endforeach; ?>

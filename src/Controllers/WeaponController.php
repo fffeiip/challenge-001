@@ -76,7 +76,13 @@ class WeaponController
 
     public function show($id)
     {
-        echo "Show Weapon Details for ID: $id";
+        $weapon = $this->weaponRepository->find($id);
+        if (!$weapon) {
+            View::render('404'); 
+            return;
+        }
+
+        View::render('weapon/show', compact('weapon'));
     }
 
     public function delete($id)
