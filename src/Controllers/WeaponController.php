@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Validators\WeaponRequestValidator;
 use App\Repositories\WeaponRepository;
 use App\Core\View;
+use App\Core\PDFGenerator;
 
 class WeaponController
 {
@@ -110,5 +111,18 @@ class WeaponController
         $_SESSION['success'] = 'Weapon deleted successfully!';
         header('Location: weapon.php');
         exit;
+    }
+
+    public function export($id)
+    {
+        $weapon = $this->weaponRepository->find($id);
+        $store = $this->weaponRepository->getStore($weapon['store_id']);
+
+        $html = View::renderRaw('weapon/pdf', [
+            'weapon' => $weapon,
+            'store' => $store
+        ]);
+
+        PDFGenerator::generate($html, "weapon-{$weapon['id']}.pdf");
     }
 }

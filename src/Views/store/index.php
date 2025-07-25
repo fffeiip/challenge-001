@@ -49,10 +49,10 @@
                         <td><?= htmlspecialchars($store['country']) ?></td>
                         <td><?= date('F j, Y', strtotime($store['created_at'])) ?></td>
                         <td class="actions">
-                            <a  class="btn view" href="store.php?action=show&id=<?= $store['id'] ?>">View</a>
-                            <a  class="btn edit" href="store.php?action=edit&id=<?= $store['id'] ?>">Edit</a> 
+                            <a title="View Store" class="btn view" href="store.php?action=show&id=<?= $store['id'] ?>">&#128065;</a>
+                            <a title="Edit Store" class="btn edit" href="store.php?action=edit&id=<?= $store['id'] ?>">&#9998;</a>
                             <form method="post" action="store.php?action=delete&id=<?= $store['id'] ?>" class="inline" onsubmit="return confirm('Delete this store?')">
-                                <button class="btn delete" type="submit">Delete</button>
+                                <button title="Delete Store" class="btn delete" type="submit">&#10006;</button>
                             </form>
                         </td>
                     </tr>

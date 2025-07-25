@@ -41,6 +41,9 @@
                 </ul>
             <?php endif; ?>
         </div>
+        <div style="margin-top: 20px;">
+            <a class="btn export" href="weapon.php?action=export&id=<?= $weapon['id'] ?>" target="_blank">Export to PDF</a>
+        </div>
     </div>
 </div>
 

@@ -62,10 +62,11 @@
                         <td><?= date('F j, Y', strtotime($weapon['created_at'])) ?></td>
                         <td> <a href="store.php?action=show&id=<?= $weapon['store_id'] ?>"><?= htmlspecialchars($weapon['store_name']) ?></a></td>
                         <td class="actions">
-                            <a  class="btn view" href="weapon.php?action=show&id=<?= $weapon['id'] ?>">View</a>
-                            <a  class="btn edit" href="weapon.php?action=edit&id=<?= $weapon['id'] ?>">Edit</a> 
+                            <a title="Export to PDF" class="btn export" href="weapon.php?action=export&id=<?= $weapon['id'] ?>" target="_blank">PDF</a>
+                            <a title="View Weapon" class="btn view" href="weapon.php?action=show&id=<?= $weapon['id'] ?>">&#128065;</a>
+                            <a title="Edit Weapon" class="btn edit" href="weapon.php?action=edit&id=<?= $weapon['id'] ?>">&#9998;</a> 
                             <form method="post" action="weapon.php?action=delete&id=<?= $weapon['id'] ?>" class="inline" onsubmit="return confirm('Delete this weapon?')">
-                                <button class="btn delete" type="submit">Delete</button>
+                                <button title="Delete Weapon" class="btn delete" type="submit">&#10006;</button>
                             </form>
                         </td>
                     </tr>
