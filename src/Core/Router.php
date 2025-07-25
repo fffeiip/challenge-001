@@ -27,21 +27,49 @@ class Router
 
     public function dispatch()
     {
-        $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $requestUri = $_SERVER['REQUEST_URI'];
         $requestMethod = $_SERVER['REQUEST_METHOD'];
         $path = trim($requestUri, '/');
 
+        // Parse query string from URI
+        $query = parse_url($requestUri, PHP_URL_QUERY);
+        parse_str($query, $queryParams);
+
+        // Determine action from query string, default to 'index'
+        $action = isset($queryParams['action']) && $queryParams['action'] !== '' ? $queryParams['action'] : 'index';
+
+        // Build route key (e.g. 'store.php?action=create')
+        $script = basename(parse_url($requestUri, PHP_URL_PATH));
+        $routeKey = $script;
+        if ($action !== 'index') {
+            $routeKey .= '?action=' . $action;
+            // If id is present, append it
+            if (isset($queryParams['id'])) {
+                $routeKey .= '&id=' . $queryParams['id'];
+            }
+        }
+
         foreach ($this->routes as $route) {
-            if ($route['method'] === $requestMethod && $route['uri'] === $path) {
+            if ($route['method'] === $requestMethod ) {
+                
+                $pattern = preg_replace('/\{[a-zA-Z0-9_]+\}/', '([a-zA-Z0-9_-]+)', $route['uri']);
+                $pattern = str_replace('?', '\?', $pattern); // Escape ?
+                $pattern = '/^' . $pattern . '$/';
 
-                if (is_array($route['callback'])) {
-                    $controller = new $route['callback'][0];
-                    $method = $route['callback'][1];
-                    return call_user_func([$controller, $method]);
-                }
+                if (preg_match($pattern, $routeKey, $matches)) {
 
-                if (is_callable($route['callback'])) {
-                    return call_user_func($route['callback']);
+                    if (is_array($route['callback'])) {
+                        $controller = new $route['callback'][0];
+                        $method = $route['callback'][1];
+
+                        // Pass matched parameters to the method if needed
+                        array_shift($matches); // Remove full match
+
+                        return call_user_func_array([$controller, $method], $matches);
+                    }
+                    if (is_callable($route['callback'])) {
+                        return call_user_func($route['callback']);
+                    }
                 }
             }
         }
