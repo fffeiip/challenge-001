@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title><?= $title ?? 'Home' ?> | Weapons Store App</title>
-    <link rel="stylesheet" href="/public/styles.css">
+    <link rel="stylesheet" href="./assets/styles.css">
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
         nav a { margin-right: 10px; text-decoration: none; }
@@ -22,12 +22,13 @@
 </nav>
 
 <hr>
-
+<div class="page-container">
 <?php if (!empty($title)): ?>
     <h1><?= htmlspecialchars($title) ?></h1>
 <?php endif; ?>
 
 <?= $content ?>
+</div>
 
 </body>
 </html>

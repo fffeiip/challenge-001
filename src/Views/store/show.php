@@ -1,33 +1,52 @@
 <?php ob_start(); ?>
 
-<p><strong>Name:</strong> <?= htmlspecialchars($store['name']) ?></p>
-<p><strong>Slug:</strong> <?= htmlspecialchars($store['slug']) ?></p>
-<p><strong>Email:</strong> <?= htmlspecialchars($store['email']) ?></p>
-<p><strong>Phone:</strong> <?= htmlspecialchars($store['phone']) ?></p>
-<p><strong>Address Line 1:</strong> <?= htmlspecialchars($store['address_line1']) ?></p>
-<p><strong>Address Line 2:</strong> <?= htmlspecialchars($store['address_line2']) ?></p>
-<p><strong>City:</strong> <?= htmlspecialchars($store['city']) ?></p>
-<p><strong>State/Region:</strong> <?= htmlspecialchars($store['state_region']) ?></p>
-<p><strong>Country:</strong> <?= htmlspecialchars($store['country']) ?></p>
-<p><strong>Created At:</strong> <?= date('F j, Y', strtotime($store['created_at'])) ?></p>
+<a href="store.php" class="btn-back">&larr; Back</a>
 
-<h3>Weapons Available:</h3>
+<div class="store-detail-container">
+    <!-- Left Column: Store Info -->
+    <div class="store-info">
+        <div class="store-detail-card">
+            <h2><?= htmlspecialchars($store['name']) ?></h2>
 
-<?php if (empty($store['weapons'])): ?>
-    <p>No weapons available.</p>
-<?php else: ?>
-    <ul>
-        <?php foreach ($store['weapons'] as $weapon): ?>
-            <li>
-                <?= htmlspecialchars($weapon['name']) ?>
-                (<?= htmlspecialchars($weapon['type']) ?>)
-                
-            </li>
-        <?php endforeach; ?>
-    </ul>
-<?php endif; ?>
+            <div class="meta">
+                <p><strong>Slug:</strong> <?= htmlspecialchars($store['slug']) ?></p>
+                <p><strong>Email:</strong> <?= htmlspecialchars($store['email']) ?></p>
+                <p><strong>Phone:</strong> <?= htmlspecialchars($store['phone']) ?></p>
+            </div>
 
-<p><a href="store.php">Back to Stores</a></p>
+            <div class="address">
+                <h3>Address</h3>
+                <p><strong>Line 1:</strong> <?= htmlspecialchars($store['address_line1']) ?></p>
+                <p><strong>Line 2:</strong> <?= htmlspecialchars($store['address_line2']) ?></p>
+                <p><strong>City:</strong> <?= htmlspecialchars($store['city']) ?></p>
+                <p><strong>State/Region:</strong> <?= htmlspecialchars($store['state_region']) ?></p>
+                <p><strong>Country:</strong> <?= htmlspecialchars($store['country']) ?></p>
+            </div>
+
+            <p class="created-at"><strong>Created At:</strong> <?= date('F j, Y', strtotime($store['created_at'])) ?></p>
+        </div>
+    </div>
+
+    <!-- Right Column: Weapons -->
+    <div class="weapon-info">
+        <div class="store-detail-card">
+            <h3>Weapons Available</h3>
+            <?php if (empty($store['weapons'])): ?>
+                <p>No weapons available.</p>
+            <?php else: ?>
+                <ul class="weapon-list">
+                    <?php foreach ($store['weapons'] as $weapon): ?>
+                        <li>
+                            <?= htmlspecialchars($weapon['name']) ?>
+                            <span class="weapon-type">(<?= htmlspecialchars($weapon['type']) ?>)</span>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
 <?php
 $content = ob_get_clean();
 $title = "Store Detail";
