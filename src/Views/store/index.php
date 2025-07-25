@@ -29,7 +29,7 @@
                         <td><?= htmlspecialchars($store['country']) ?></td>
                         <td><?= date('F j, Y', strtotime($store['created_at'])) ?></td>
                         <td>
-                            View | Edit | Delete
+                            <a href="store.php?action=show&id=<?= $store['id'] ?>">View</a> | Edit | Delete
                         </td>
                     </tr>
                 <?php endforeach; ?>

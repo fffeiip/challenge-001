@@ -38,5 +38,11 @@ class StoreController
         header('Location: /store.php');
         exit;
     }
+
+    public function show($id)
+    {
+        $store = $this->storeRepository->find($id);
+        View::render('store/show', compact('store'));
+    }
     
 }

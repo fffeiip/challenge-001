@@ -22,9 +22,15 @@ class StoreRepository implements StoreRepositoryInterface
         return $stores = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function find()
+    public function find(int $id): ?array
     {
-        // Will implement later
+        $stmt = $this->pdo->prepare("SELECT * FROM stores WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $store = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($store) {
+            $store['weapons'] = $this->getWeapons($id);
+        }
+        return $store ?: null;
     }
 
     public function create(array $data): bool
@@ -59,4 +65,16 @@ class StoreRepository implements StoreRepositoryInterface
         // Will implement later
     }
     
+    public function getWeapons(int $storeId): ?array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT weapons.* 
+            FROM weapons 
+            WHERE store_id = :store_id
+            ORDER BY weapons.name ASC
+        ");
+        $stmt->bindValue(':store_id', $storeId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
