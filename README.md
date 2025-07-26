@@ -1,4 +1,19 @@
- # PHP Stores & Weapons CRUD Application
+ <img width="1891" height="875" alt="Screenshot 2025-07-26 192657" src="https://github.com/user-attachments/assets/2e34d571-d995-4112-9bb3-538dd66c6561" />
+ 
+ <img width="1839" height="855" alt="Screenshot 2025-07-26 192724" src="https://github.com/user-attachments/assets/db69b1ef-1240-4aed-8084-b53446c5c5ab" />
+
+<img width="1871" height="855" alt="Screenshot 2025-07-26 192738" src="https://github.com/user-attachments/assets/28f8ed2b-3918-4a66-bbfb-4152970f1059" />
+
+<img width="1909" height="875" alt="Screenshot 2025-07-26 192757" src="https://github.com/user-attachments/assets/15c81ba0-83a7-42e9-9cbf-173b7d43a7ed" />
+
+<img width="1919" height="850" alt="Screenshot 2025-07-26 192830" src="https://github.com/user-attachments/assets/6a2a23f5-feb4-476e-82a1-1de29d412351" />
+
+
+<img width="1903" height="870" alt="Screenshot 2025-07-26 192843" src="https://github.com/user-attachments/assets/8f27fb6e-db21-4f96-93e0-06a572f25eec" />
+
+<img width="1916" height="851" alt="Screenshot 2025-07-26 192915" src="https://github.com/user-attachments/assets/5dea9a7e-36ad-49ad-bc42-02cd73ccd6fb" />
+
+# PHP Stores & Weapons CRUD Application
 
 This project is a pure PHP 7.2 web application for managing stores and their weapon inventories, built as a technical challenge. It provides full CRUD (Create, Read, Update, Delete) functionality for both stores and weapons, featuring server-side sorting, filtering, pagination, and PDF exports without relying on any major frameworks.
 
