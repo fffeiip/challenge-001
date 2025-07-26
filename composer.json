@@ -1,0 +1,37 @@
+{
+    "require": {
+        "tecnickcom/tcpdf": "^6.10",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.0"
+    },
+     "autoload": {
+        "classmap": [
+            "src/",
+            "src/Controllers/",
+            "src/Repositories/"
+        ],
+        "files": [
+            "src/Utils.php"
+        ]
+    },
+    "autoload-dev": {
+        "classmap": [
+            "tests/"
+        ]
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-html public/coverage",
+        "db:setup": [
+            "@db:create",
+            "@db:migrate",
+            "@db:seed"
+        ],
+        "db:create": "php db/create_database.php",
+        "db:migrate": "php db/migrate.php",
+        "db:seed": "php db/seed.php",
+        "db:reset": "php db/reset_db.php"
+    }
+}
