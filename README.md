@@ -61,6 +61,41 @@ git clone <your-repository-url>
 cd challenge-001
 ```
 
+
+## Running the Application
+
+You can run the application using Docker (recommended) or a local PHP development server.
+
+### Option 1: Using Docker (Recommended)
+
+This project is fully containerized using Docker and Docker Compose, providing a consistent and isolated development environment. This is the simplest way to get started.
+
+1.  **Prerequisites**:
+    *   [Docker](https://www.docker.com/get-started)
+    *   [Docker Compose](https://docs.docker.com/compose/install/)
+
+2.  **Build and Run the Containers**:
+    From the project root, run the following command to build the images and start the services in the background:
+    ```bash
+    docker-compose up -d --build
+    ```
+    This command will:
+    *   Build the PHP-Apache image for the application.
+    *   Start the `app`, `db` (MySQL), and `phpmyadmin` services.
+    *   The `app` container will automatically run `composer install` and `composer run db:setup` to prepare the database and runs tests, so no manual database setup is needed.
+
+3.  **Access the Application**:
+    *   **Web Application**: Open your browser and navigate to **http://localhost:8000**.
+    *   **phpMyAdmin**: Access the database via phpMyAdmin at **http://localhost:8080**. Use `db` for the server, `root` for the user, and `root` for the password.
+
+4.  **Stopping the Application**:
+    To stop the containers, run:
+    ```bash
+    docker-compose down
+    ```
+
+### Option 2: Using the PHP Built-in Web Server (for Local Development without Docker)
+
 ### 2. Install Dependencies
 
 Run Composer to install the required PHP libraries.
@@ -75,16 +110,12 @@ This step will only be necessary if you have a different root user and password 
 
 The application uses a `.env` file to manage database credentials and other environment-specific settings.
 
-1.  Copy the example environment file:
-    ```bash
-    copy .env.example .env
-    ```
-2.  Open the `.env` file and update the database credentials to match your local setup:
+1.  Open the `.env` file and replace with the code below:
     ```dotenv
     DB_HOST=127.0.0.1
-    DB_DATABASE=your_database_name
-    DB_USERNAME=your_database_user
-    DB_PASSWORD=your_database_password
+    DB_DATABASE=challenge_db
+    DB_USERNAME=root
+    DB_PASSWORD=
     ```
 
 ### 4. Database Setup
@@ -106,11 +137,6 @@ The application uses a `.env` file to manage database credentials and other envi
     ``` 
 ---
 
-## Running the Application
-
-You can run the application using either PHP's built-in web server or a full-featured server like Apache.
-
-### Option 1: Using the PHP Built-in Web Server (Recommended for Development)
 
 1.  Navigate to the project's root directory in your terminal.
 2.  Run the following command:
@@ -118,7 +144,6 @@ You can run the application using either PHP's built-in web server or a full-fea
     php -S localhost:8000 -t public
     ```
 3.  Open your web browser and go to **http://localhost:8000**.
-
 
 ## Running Tests
 
@@ -143,6 +168,3 @@ composer run test-coverage
 The coverage report will be generated in the `public/coverage/` directory. You can open the `index.html` file in that directory with your browser to view the report.
 
 **Note**: For test coverage to work correctly, you may need to have the Xdebug PHP extension installed and enabled.
-
-
-
