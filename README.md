@@ -86,7 +86,7 @@ This project is fully containerized using Docker and Docker Compose, providing a
 
 3.  **Access the Application**:
     *   **Web Application**: Open your browser and navigate to **http://localhost:8000**.
-    *   **phpMyAdmin**: Access the database via phpMyAdmin at **http://localhost:8080**. Use `db` for the server, `root` for the user, and `root` for the password.
+    *   **phpMyAdmin**: Access the database via phpMyAdmin at **http://localhost:8001**. Use `db` for the server, `root` for the user, and `root` for the password.
 
 4.  **Stopping the Application**:
     To stop the containers, run:
