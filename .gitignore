@@ -17,6 +17,7 @@
 # OS generated files
 .DS_Store
 Thumbs.db
+/.phpunit.result.cache
 
 # Temporary files and cache
 /temp/
