@@ -1,4 +1,30 @@
 
+<img width="1914" height="968" alt="Screenshot 2025-07-27 220127" src="https://github.com/user-attachments/assets/7a3bd0e9-11ae-4c71-8a06-f44dca581e9c" />
+
+<img width="1903" height="952" alt="Screenshot 2025-07-27 220154" src="https://github.com/user-attachments/assets/b0787de9-d2e3-486b-baed-bfb107d320a2" />
+
+<img width="1919" height="871" alt="Screenshot 2025-07-27 220222" src="https://github.com/user-attachments/assets/69e3757c-9f1f-4a28-88cb-e96578e6414e" />
+
+<img width="1912" height="857" alt="Screenshot 2025-07-27 220240" src="https://github.com/user-attachments/assets/166079b9-2920-4ea8-a2e3-d1f5c40b638a" />
+
+<img width="1919" height="867" alt="Screenshot 2025-07-27 220304" src="https://github.com/user-attachments/assets/b484fdd8-146e-4391-a3bd-67e18e807beb" />
+
+<img width="1919" height="858" alt="Screenshot 2025-07-27 220321" src="https://github.com/user-attachments/assets/772c87e6-e752-40a7-b0fe-c9b17492f1b6" />
+
+<img width="1908" height="862" alt="Screenshot 2025-07-27 220337" src="https://github.com/user-attachments/assets/2faefbdf-2612-4c55-9128-64c2ec9d1a7a" />
+
+<img width="1902" height="878" alt="Screenshot 2025-07-27 220405" src="https://github.com/user-attachments/assets/7fe9eec6-c88d-448d-b90e-d26b6fba5065" />
+
+<img width="1904" height="921" alt="Screenshot 2025-07-27 220427" src="https://github.com/user-attachments/assets/1ab60036-b816-4dfc-9b16-b32618acaf7c" />
+
+<img width="1886" height="1018" alt="Screenshot 2025-07-27 221145" src="https://github.com/user-attachments/assets/6bc553df-91f0-46c6-adff-9e66945c7cca" />
+
+<img width="1901" height="869" alt="Screenshot 2025-07-27 221210" src="https://github.com/user-attachments/assets/3b0e301c-b997-4974-80da-a1ae32fd61fb" />
+
+<img width="1912" height="867" alt="Screenshot 2025-07-27 221224" src="https://github.com/user-attachments/assets/d977fc83-2936-4187-9817-61748a3f5791" />
+
+<img width="1904" height="919" alt="Screenshot 2025-07-27 220020" src="https://github.com/user-attachments/assets/a1962f03-b108-4d82-a170-92da8ef1188b" />
+
 # PHP Stores & Weapons CRUD Application
 
 This project is a pure PHP 7.2 web application for managing stores and their weapon inventories, built as a technical challenge. It provides full CRUD (Create, Read, Update, Delete) functionality for both stores and weapons, featuring server-side sorting, filtering, pagination, and PDF exports without relying on any major frameworks.
