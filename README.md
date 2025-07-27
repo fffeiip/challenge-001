@@ -1,17 +1,3 @@
- <img width="1891" height="875" alt="Screenshot 2025-07-26 192657" src="https://github.com/user-attachments/assets/2e34d571-d995-4112-9bb3-538dd66c6561" />
- 
- <img width="1839" height="855" alt="Screenshot 2025-07-26 192724" src="https://github.com/user-attachments/assets/db69b1ef-1240-4aed-8084-b53446c5c5ab" />
-
-<img width="1871" height="855" alt="Screenshot 2025-07-26 192738" src="https://github.com/user-attachments/assets/28f8ed2b-3918-4a66-bbfb-4152970f1059" />
-
-<img width="1909" height="875" alt="Screenshot 2025-07-26 192757" src="https://github.com/user-attachments/assets/15c81ba0-83a7-42e9-9cbf-173b7d43a7ed" />
-
-<img width="1919" height="850" alt="Screenshot 2025-07-26 192830" src="https://github.com/user-attachments/assets/6a2a23f5-feb4-476e-82a1-1de29d412351" />
-
-
-<img width="1903" height="870" alt="Screenshot 2025-07-26 192843" src="https://github.com/user-attachments/assets/8f27fb6e-db21-4f96-93e0-06a572f25eec" />
-
-<img width="1916" height="851" alt="Screenshot 2025-07-26 192915" src="https://github.com/user-attachments/assets/5dea9a7e-36ad-49ad-bc42-02cd73ccd6fb" />
 
 # PHP Stores & Weapons CRUD Application
 
@@ -30,6 +16,40 @@ This project is a pure PHP 7.2 web application for managing stores and their wea
     *   Pagination to handle large datasets.
 *   **PDF Export**: Generate a PDF "spec sheet" for any weapon record.
 *   **Navigation**: Easily navigate from a weapon to its store, and from a store to its list of weapons.
+
+## Bonus Features Implemented
+
+This project goes beyond the core requirements by implementing several optional bonus features, significantly enhancing its functionality and developer experience.
+
+### 1. Fully Dockerized Environment
+
+A complete `docker-compose` environment is provided for a seamless, one-command setup. This eliminates the need for manual local server configuration.
+
+*   **Services**: Includes pre-configured services for the Apache/PHP application (`app`), a MySQL database (`db`), and a `phpmyadmin` container for easy database management.
+*   **Automated Setup**: Running `docker-compose up -d` automatically builds the PHP image, installs Composer dependencies, and runs the database setup scripts (`db:setup`).
+*   **Health Checks**: The application container waits for the database to be healthy before starting, preventing startup race conditions and connection errors.
+
+### 2. CSV Import/Export for Weapons
+
+The weapons inventory can be managed in bulk via CSV, a powerful feature for data migration and external editing.
+
+*   **Export**: From the weapons list, the currently filtered and sorted data can be exported to a CSV file.
+*   **Import**: A user-friendly form allows uploading a CSV file to create new weapons or update existing ones (matched by `serial_number`).
+*   **Template & Validation**: A downloadable CSV template is provided to ensure correct formatting. The import process includes robust server-side validation for file structure and data integrity, providing clear, line-by-line feedback on any errors.
+
+### 3. Bulk PDF Export
+
+Multiple weapon spec sheets can be exported at once, a significant time-saver for administrative tasks.
+
+*   **Multi-Select**: Users can select multiple weapons from the list using checkboxes.
+*   **ZIP Archive**: The selected weapon details are generated as individual, well-formatted PDFs and bundled into a single downloadable ZIP archive for convenience.
+
+### 4. Store Autocomplete Search
+
+To enhance usability, the weapon creation and editing forms feature a live autocomplete search for stores.
+
+*   **Dynamic Search**: As a user types a store name, an AJAX request is sent to a dedicated JSON endpoint (`/weapons/store-autocomplete`).
+*   **REST-like Endpoint**: The server responds with a JSON list of matching stores, which are then displayed to the user, providing a fast and intuitive way to link a weapon to a store.
 
 ## Technical Stack
 

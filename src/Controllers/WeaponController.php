@@ -472,393 +472,378 @@ class WeaponController
         ]);
     }
 
-   /**
- * Process CSV import with enhanced validation
- */
-public function importCsv(): void
-{
-    try {
-        // Validate file upload
-        if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
-            throw new Exception('Please select a valid CSV file to upload.');
+   
+    public function importCsv(): void
+    {
+        try {
+            // Validate file upload
+            if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception('Please select a valid CSV file to upload.');
+            }
+
+            $file = $_FILES['csv_file'];
+            
+            // Validate file type and size
+            $this->validateUploadedFile($file);
+
+            // Read and parse CSV
+            $csvData = $this->parseCsvFile($file['tmp_name']);
+            
+            if (empty($csvData)) {
+                throw new Exception('CSV file is empty or could not be parsed.');
+            }
+
+            // Get import options
+            $skipFirstRow = isset($_POST['skip_first_row']) && $_POST['skip_first_row'] === '1';
+            $updateExisting = isset($_POST['update_existing']) && $_POST['update_existing'] === '1';
+            $defaultStoreId = !empty($_POST['default_store_id']) ? (int)$_POST['default_store_id'] : null;
+
+            // Initialize CSV validator
+            $stores = $this->storeRepo->findAllWithoutPagination();
+            $validStoreIds = array_column($stores, 'id');
+            $validator = new CsvWeaponValidator($validStoreIds);
+
+            // Validate CSV structure
+            $structureValidation = $validator->validateCsvStructure($csvData, $skipFirstRow);
+            if (!$structureValidation['valid']) {
+                throw new Exception('CSV structure error: ' . implode(', ', $structureValidation['errors']));
+            }
+
+            // Remove header row if needed
+            $dataRows = $csvData;
+            if ($skipFirstRow && count($dataRows) > 0) {
+                array_shift($dataRows);
+            }
+
+            if (empty($dataRows)) {
+                throw new Exception('No data rows found in CSV file.');
+            }
+
+            // Process the import with enhanced validation
+            $importResults = $this->processEnhancedWeaponImport($dataRows, $validator, $updateExisting, $defaultStoreId);
+
+            // Generate success/error message
+            $this->setImportResultMessage($importResults);
+
+        } catch (Exception $e) {
+            setFlashMessage('error', 'Import failed: ' . $e->getMessage());
         }
 
-        $file = $_FILES['csv_file'];
-        
-        // Validate file type and size
-        $this->validateUploadedFile($file);
-
-        // Read and parse CSV
-        $csvData = $this->parseCsvFile($file['tmp_name']);
-        
-        if (empty($csvData)) {
-            throw new Exception('CSV file is empty or could not be parsed.');
-        }
-
-        // Get import options
-        $skipFirstRow = isset($_POST['skip_first_row']) && $_POST['skip_first_row'] === '1';
-        $updateExisting = isset($_POST['update_existing']) && $_POST['update_existing'] === '1';
-        $defaultStoreId = !empty($_POST['default_store_id']) ? (int)$_POST['default_store_id'] : null;
-
-        // Initialize CSV validator
-        $stores = $this->storeRepo->findAllWithoutPagination();
-        $validStoreIds = array_column($stores, 'id');
-        $validator = new CsvWeaponValidator($validStoreIds);
-
-        // Validate CSV structure
-        $structureValidation = $validator->validateCsvStructure($csvData, $skipFirstRow);
-        if (!$structureValidation['valid']) {
-            throw new Exception('CSV structure error: ' . implode(', ', $structureValidation['errors']));
-        }
-
-        // Remove header row if needed
-        $dataRows = $csvData;
-        if ($skipFirstRow && count($dataRows) > 0) {
-            array_shift($dataRows);
-        }
-
-        if (empty($dataRows)) {
-            throw new Exception('No data rows found in CSV file.');
-        }
-
-        // Process the import with enhanced validation
-        $importResults = $this->processEnhancedWeaponImport($dataRows, $validator, $updateExisting, $defaultStoreId);
-
-        // Generate success/error message
-        $this->setImportResultMessage($importResults);
-
-    } catch (Exception $e) {
-        setFlashMessage('error', 'Import failed: ' . $e->getMessage());
+        header('Location: /weapons/list');
+        exit();
     }
 
-    header('Location: /weapons/list');
-    exit();
-}
 
-/**
- * Validate uploaded file
- */
-private function validateUploadedFile(array $file): void
-{
-    // Validate file type
-    $allowedTypes = ['text/csv', 'application/csv', 'text/plain'];
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mimeType = finfo_file($finfo, $file['tmp_name']);
-    finfo_close($finfo);
+    private function validateUploadedFile(array $file): void
+    {
+        // Validate file type
+        $allowedTypes = ['text/csv', 'application/csv', 'text/plain'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        
+        $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        if (!in_array($mimeType, $allowedTypes) && $extension !== 'csv') {
+            throw new Exception('Invalid file type. Please upload a CSV file.');
+        }
+
+        // Validate file size (10MB max)
+        if ($file['size'] > 10 * 1024 * 1024) {
+            throw new Exception('File too large. Maximum size is 10MB.');
+        }
+
+        // Check if file is readable
+        if (!is_readable($file['tmp_name'])) {
+            throw new Exception('Unable to read the uploaded file.');
+        }
+    }
+
     
-    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    
-    if (!in_array($mimeType, $allowedTypes) && $extension !== 'csv') {
-        throw new Exception('Invalid file type. Please upload a CSV file.');
+    private function parseCsvFile(string $filePath): array
+    {
+        try {
+            // Read file content
+            $content = file_get_contents($filePath);
+            
+            if ($content === false) {
+                throw new Exception('Unable to read CSV file.');
+            }
+
+            // Remove UTF-8 BOM if present
+            if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
+                $content = substr($content, 3);
+            }
+
+            // Auto-detect line endings
+            $content = str_replace(["\r\n", "\r"], "\n", $content);
+            
+            // Split into lines
+            $lines = explode("\n", $content);
+            
+            // Remove empty lines
+            $lines = array_filter($lines, function($line) {
+                return trim($line) !== '';
+            });
+
+            if (empty($lines)) {
+                throw new Exception('CSV file contains no data.');
+            }
+
+            // Auto-detect delimiter
+            $delimiter = $this->detectCsvDelimiter($lines[0]);
+            
+            $csvData = [];
+            
+            foreach ($lines as $lineNumber => $line) {
+                try {
+                    // Parse CSV line with proper parameters
+                    $row = str_getcsv($line, $delimiter, '"', "\\");
+                    
+                    // Skip empty rows
+                    if (!empty(array_filter($row, function($cell) {
+                        return trim($cell) !== '';
+                    }))) {
+                        $csvData[] = $row;
+                    }
+                    
+                } catch (Exception $e) {
+                    throw new Exception("Error parsing line " . ($lineNumber + 1) . ": " . $e->getMessage());
+                }
+            }
+
+            return $csvData;
+            
+        } catch (Exception $e) {
+            throw new Exception('CSV parsing failed: ' . $e->getMessage());
+        }
     }
 
-    // Validate file size (10MB max)
-    if ($file['size'] > 10 * 1024 * 1024) {
-        throw new Exception('File too large. Maximum size is 10MB.');
+   
+    private function detectCsvDelimiter(string $firstLine): string
+    {
+        $delimiters = [',', ';', "\t", '|'];
+        $delimiter = ','; // default
+        $maxCount = 0;
+        
+        foreach ($delimiters as $d) {
+            $count = substr_count($firstLine, $d);
+            if ($count > $maxCount) {
+                $maxCount = $count;
+                $delimiter = $d;
+            }
+        }
+        
+        return $delimiter;
     }
 
-    // Check if file is readable
-    if (!is_readable($file['tmp_name'])) {
-        throw new Exception('Unable to read the uploaded file.');
-    }
-}
-
-/**
- * Parse CSV file with proper encoding and delimiter detection
- */
-private function parseCsvFile(string $filePath): array
-{
-    try {
-        // Read file content
-        $content = file_get_contents($filePath);
+   
+    private function mapCsvRowToWeaponData(array $row, ?int $defaultStoreId): array
+    {
+        // Expected CSV columns (adjust based on your CSV structure)
+        $expectedColumns = [
+            'name',
+            'type', 
+            'category',
+            'serial_number',
+            'caliber',
+            'manufacturer',
+            'model',
+            'barrel_length',
+            'overall_length',
+            'weight',
+            'capacity',
+            'action_type',
+            'finish',
+            'stock_material',
+            'sights',
+            'safety_features',
+            'accessories',
+            'condition',
+            'purchase_date',
+            'purchase_price',
+            'current_value',
+            'store_id',
+            'notes'
+        ];
         
-        if ($content === false) {
-            throw new Exception('Unable to read CSV file.');
+        $weaponData = [];
+        
+        // Map row values to expected columns
+        foreach ($expectedColumns as $index => $column) {
+            $weaponData[$column] = isset($row[$index]) ? trim($row[$index]) : '';
         }
-
-        // Remove UTF-8 BOM if present
-        if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
-            $content = substr($content, 3);
+        
+        // Use default store if no store_id provided or invalid
+        if (empty($weaponData['store_id']) || !is_numeric($weaponData['store_id'])) {
+            $weaponData['store_id'] = $defaultStoreId;
+        } else {
+            $weaponData['store_id'] = (int)$weaponData['store_id'];
         }
-
-        // Auto-detect line endings
-        $content = str_replace(["\r\n", "\r"], "\n", $content);
         
-        // Split into lines
-        $lines = explode("\n", $content);
-        
-        // Remove empty lines
-        $lines = array_filter($lines, function($line) {
-            return trim($line) !== '';
-        });
-
-        if (empty($lines)) {
-            throw new Exception('CSV file contains no data.');
+        // Convert numeric fields
+        $numericFields = ['barrel_length', 'overall_length', 'weight', 'capacity', 'purchase_price', 'current_value'];
+        foreach ($numericFields as $field) {
+            if (!empty($weaponData[$field]) && is_numeric($weaponData[$field])) {
+                $weaponData[$field] = (float)$weaponData[$field];
+            } else {
+                $weaponData[$field] = null;
+            }
         }
-
-        // Auto-detect delimiter
-        $delimiter = $this->detectCsvDelimiter($lines[0]);
         
-        $csvData = [];
-        
-        foreach ($lines as $lineNumber => $line) {
+        // Handle date fields
+        if (!empty($weaponData['purchase_date'])) {
             try {
-                // Parse CSV line with proper parameters
-                $row = str_getcsv($line, $delimiter, '"', "\\");
+                $date = new DateTime($weaponData['purchase_date']);
+                $weaponData['purchase_date'] = $date->format('Y-m-d');
+            } catch (Exception $e) {
+                $weaponData['purchase_date'] = null;
+            }
+        } else {
+            $weaponData['purchase_date'] = null;
+        }
+        
+        return $weaponData;
+    }
+
+    private function processEnhancedWeaponImport(array $csvData, CsvWeaponValidator $validator, bool $updateExisting, ?int $defaultStoreId): array
+    {
+        $results = [
+            'created' => 0,
+            'updated' => 0,
+            'skipped' => 0,
+            'errors' => 0,
+            'error_details' => [],
+            'duplicate_serials' => []
+        ];
+
+        // Prepare weapon data and validate structure
+        $weaponDataArray = [];
+        $validationResults = [];
+
+        foreach ($csvData as $rowIndex => $row) {
+            $lineNumber = $rowIndex + 1;
+            
+            try {
+                // Map CSV row to weapon data
+                $weaponData = $this->mapCsvRowToWeaponData($row, $defaultStoreId);
                 
-                // Skip empty rows
-                if (!empty(array_filter($row, function($cell) {
-                    return trim($cell) !== '';
-                }))) {
-                    $csvData[] = $row;
+                // Clean the data
+                $weaponData = $validator->cleanWeaponData($weaponData);
+                
+                // Validate the weapon data
+                $validation = $validator->validateWeapon($weaponData, $lineNumber);
+                $validationResults[] = $validation;
+                
+                if ($validation['valid']) {
+                    $weaponDataArray[] = $weaponData;
                 }
                 
             } catch (Exception $e) {
-                throw new Exception("Error parsing line " . ($lineNumber + 1) . ": " . $e->getMessage());
+                $results['errors']++;
+                $results['error_details'][] = "Line {$lineNumber}: Data mapping error - " . $e->getMessage();
             }
         }
 
-        return $csvData;
-        
-    } catch (Exception $e) {
-        throw new Exception('CSV parsing failed: ' . $e->getMessage());
-    }
-}
-
-/**
- * Auto-detect CSV delimiter
- */
-private function detectCsvDelimiter(string $firstLine): string
-{
-    $delimiters = [',', ';', "\t", '|'];
-    $delimiter = ','; // default
-    $maxCount = 0;
-    
-    foreach ($delimiters as $d) {
-        $count = substr_count($firstLine, $d);
-        if ($count > $maxCount) {
-            $maxCount = $count;
-            $delimiter = $d;
-        }
-    }
-    
-    return $delimiter;
-}
-
-/**
- * Map CSV row to weapon data structure
- */
-private function mapCsvRowToWeaponData(array $row, ?int $defaultStoreId): array
-{
-    // Expected CSV columns (adjust based on your CSV structure)
-    $expectedColumns = [
-        'name',
-        'type', 
-        'category',
-        'serial_number',
-        'caliber',
-        'manufacturer',
-        'model',
-        'barrel_length',
-        'overall_length',
-        'weight',
-        'capacity',
-        'action_type',
-        'finish',
-        'stock_material',
-        'sights',
-        'safety_features',
-        'accessories',
-        'condition',
-        'purchase_date',
-        'purchase_price',
-        'current_value',
-        'store_id',
-        'notes'
-    ];
-    
-    $weaponData = [];
-    
-    // Map row values to expected columns
-    foreach ($expectedColumns as $index => $column) {
-        $weaponData[$column] = isset($row[$index]) ? trim($row[$index]) : '';
-    }
-    
-    // Use default store if no store_id provided or invalid
-    if (empty($weaponData['store_id']) || !is_numeric($weaponData['store_id'])) {
-        $weaponData['store_id'] = $defaultStoreId;
-    } else {
-        $weaponData['store_id'] = (int)$weaponData['store_id'];
-    }
-    
-    // Convert numeric fields
-    $numericFields = ['barrel_length', 'overall_length', 'weight', 'capacity', 'purchase_price', 'current_value'];
-    foreach ($numericFields as $field) {
-        if (!empty($weaponData[$field]) && is_numeric($weaponData[$field])) {
-            $weaponData[$field] = (float)$weaponData[$field];
-        } else {
-            $weaponData[$field] = null;
-        }
-    }
-    
-    // Handle date fields
-    if (!empty($weaponData['purchase_date'])) {
-        try {
-            $date = new DateTime($weaponData['purchase_date']);
-            $weaponData['purchase_date'] = $date->format('Y-m-d');
-        } catch (Exception $e) {
-            $weaponData['purchase_date'] = null;
-        }
-    } else {
-        $weaponData['purchase_date'] = null;
-    }
-    
-    return $weaponData;
-}
-
-/**
- * Enhanced weapon import processing with comprehensive validation
- */
-private function processEnhancedWeaponImport(array $csvData, CsvWeaponValidator $validator, bool $updateExisting, ?int $defaultStoreId): array
-{
-    $results = [
-        'created' => 0,
-        'updated' => 0,
-        'skipped' => 0,
-        'errors' => 0,
-        'error_details' => [],
-        'duplicate_serials' => []
-    ];
-
-    // Prepare weapon data and validate structure
-    $weaponDataArray = [];
-    $validationResults = [];
-
-    foreach ($csvData as $rowIndex => $row) {
-        $lineNumber = $rowIndex + 1;
-        
-        try {
-            // Map CSV row to weapon data
-            $weaponData = $this->mapCsvRowToWeaponData($row, $defaultStoreId);
-            
-            // Clean the data
-            $weaponData = $validator->cleanWeaponData($weaponData);
-            
-            // Validate the weapon data
-            $validation = $validator->validateWeapon($weaponData, $lineNumber);
-            $validationResults[] = $validation;
-            
-            if ($validation['valid']) {
-                $weaponDataArray[] = $weaponData;
-            }
-            
-        } catch (Exception $e) {
-            $results['errors']++;
-            $results['error_details'][] = "Line {$lineNumber}: Data mapping error - " . $e->getMessage();
-        }
-    }
-
-    // Check for duplicate serial numbers within the CSV
-    $duplicates = $validator->findDuplicateSerialNumbers($weaponDataArray);
-    if (!empty($duplicates)) {
-        foreach ($duplicates as $serial => $lines) {
-            $results['error_details'][] = "Duplicate serial number '{$serial}' found on lines: " . implode(', ', $lines);
-            $results['errors'] += count($lines) - 1; // First occurrence is valid, others are errors
-        }
-    }
-
-    // Process each valid weapon
-    foreach ($weaponDataArray as $index => $weaponData) {
-        $lineNumber = $index + 1;
-        
-        // Skip if this was flagged as a duplicate
-        $isDuplicate = false;
-        foreach ($duplicates as $serial => $lines) {
-            if ($weaponData['serial_number'] === $serial && $lineNumber !== $lines[0]) {
-                $isDuplicate = true;
-                break;
+        // Check for duplicate serial numbers within the CSV
+        $duplicates = $validator->findDuplicateSerialNumbers($weaponDataArray);
+        if (!empty($duplicates)) {
+            foreach ($duplicates as $serial => $lines) {
+                $results['error_details'][] = "Duplicate serial number '{$serial}' found on lines: " . implode(', ', $lines);
+                $results['errors'] += count($lines) - 1; // First occurrence is valid, others are errors
             }
         }
-        
-        if ($isDuplicate) {
-            $results['skipped']++;
-            continue;
-        }
 
-        try {
-            // Check if weapon exists (by serial number)
-            $existingWeapon = $this->weaponRepo->findBySerialNumber($weaponData['serial_number']);
+        // Process each valid weapon
+        foreach ($weaponDataArray as $index => $weaponData) {
+            $lineNumber = $index + 1;
             
-            if ($existingWeapon) {
-                if ($updateExisting) {
-                    $this->weaponRepo->update($weaponData, $existingWeapon['id']);
-                    $results['updated']++;
-                } else {
-                    $results['skipped']++;
+            // Skip if this was flagged as a duplicate
+            $isDuplicate = false;
+            foreach ($duplicates as $serial => $lines) {
+                if ($weaponData['serial_number'] === $serial && $lineNumber !== $lines[0]) {
+                    $isDuplicate = true;
+                    break;
                 }
-            } else {
-                $this->weaponRepo->save($weaponData);
-                $results['created']++;
             }
-
-        } catch (PDOException $e) {
-            $results['errors']++;
-            if ($e->getCode() == 23000) {
-                $results['error_details'][] = "Line {$lineNumber}: Serial number already exists";
-            } else {
-                $results['error_details'][] = "Line {$lineNumber}: Database error - " . $e->getMessage();
-            }
-        } catch (Exception $e) {
-            $results['errors']++;
-            $results['error_details'][] = "Line {$lineNumber}: " . $e->getMessage();
-        }
-    }
-
-    // Add validation errors to results
-    foreach ($validationResults as $validation) {
-        if (!$validation['valid']) {
-            $results['errors']++;
-            $results['error_details'][] = "Line {$validation['line']}: " . implode(', ', $validation['errors']);
-        }
-    }
-
-    return $results;
-}
-
-/**
- * Set appropriate flash message based on import results
- */
-private function setImportResultMessage(array $results): void
-{
-    $message = sprintf(
-        'Import completed! Created: %d, Updated: %d, Skipped: %d',
-        $results['created'],
-        $results['updated'],
-        $results['skipped']
-    );
-
-    if ($results['errors'] > 0) {
-        $message .= sprintf(', Errors: %d', $results['errors']);
-        
-        if (!empty($results['error_details'])) {
-            $message .= "\n\nError Details:\n";
             
-            // Show first 15 errors
-            $errorsToShow = array_slice($results['error_details'], 0, 15);
-            $message .= implode("\n", $errorsToShow);
-            
-            if (count($results['error_details']) > 15) {
-                $message .= "\n... and " . (count($results['error_details']) - 15) . " more errors.";
+            if ($isDuplicate) {
+                $results['skipped']++;
+                continue;
+            }
+
+            try {
+                // Check if weapon exists (by serial number)
+                $existingWeapon = $this->weaponRepo->findBySerialNumber($weaponData['serial_number']);
+                
+                if ($existingWeapon) {
+                    if ($updateExisting) {
+                        $this->weaponRepo->update($weaponData, $existingWeapon['id']);
+                        $results['updated']++;
+                    } else {
+                        $results['skipped']++;
+                    }
+                } else {
+                    $this->weaponRepo->save($weaponData);
+                    $results['created']++;
+                }
+
+            } catch (PDOException $e) {
+                $results['errors']++;
+                if ($e->getCode() == 23000) {
+                    $results['error_details'][] = "Line {$lineNumber}: Serial number already exists";
+                } else {
+                    $results['error_details'][] = "Line {$lineNumber}: Database error - " . $e->getMessage();
+                }
+            } catch (Exception $e) {
+                $results['errors']++;
+                $results['error_details'][] = "Line {$lineNumber}: " . $e->getMessage();
             }
         }
-        
-        $messageType = ($results['created'] + $results['updated']) > 0 ? 'warning' : 'error';
-    } else {
-        $messageType = 'success';
+
+        // Add validation errors to results
+        foreach ($validationResults as $validation) {
+            if (!$validation['valid']) {
+                $results['errors']++;
+                $results['error_details'][] = "Line {$validation['line']}: " . implode(', ', $validation['errors']);
+            }
+        }
+
+        return $results;
     }
 
-    setFlashMessage($messageType, $message);
-}
+
+    private function setImportResultMessage(array $results): void
+    {
+        $message = sprintf(
+            'Import completed! Created: %d, Updated: %d, Skipped: %d',
+            $results['created'],
+            $results['updated'],
+            $results['skipped']
+        );
+
+        if ($results['errors'] > 0) {
+            $message .= sprintf(', Errors: %d', $results['errors']);
+            
+            if (!empty($results['error_details'])) {
+                $message .= "\n\nError Details:\n";
+                
+                // Show first 15 errors
+                $errorsToShow = array_slice($results['error_details'], 0, 15);
+                $message .= implode("\n", $errorsToShow);
+                
+                if (count($results['error_details']) > 15) {
+                    $message .= "\n... and " . (count($results['error_details']) - 15) . " more errors.";
+                }
+            }
+            
+            $messageType = ($results['created'] + $results['updated']) > 0 ? 'warning' : 'error';
+        } else {
+            $messageType = 'success';
+        }
+
+        setFlashMessage($messageType, $message);
+    }
    
     public function downloadCsvTemplate(): void
     {

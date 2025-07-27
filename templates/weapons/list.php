@@ -177,7 +177,7 @@ function getPaginationUrl($page, $current_params) {
                     <span id="selection-count" class="selection-count">0 selected</span>
                 </div>
                 <div class="bulk-buttons">
-                    <button type="submit" id="bulk-export-btn" class="btn btn-info" disabled>
+                    <button type="submit" id="bulk-export-btn" class="btn btn-secondary" disabled>
                         📄 Export Selected PDFs
                     </button>
                 </div>

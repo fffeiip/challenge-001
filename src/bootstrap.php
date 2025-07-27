@@ -26,15 +26,3 @@ $GLOBALS['db_config'] = require PROJECT_ROOT . '/config/database.php';
 if (php_sapi_name() !== 'cli') {
     session_start();
 }
-
-// // Load Core Classes and Controllers
-
-// require_once PROJECT_ROOT . '/src/Database.php';
-// require_once PROJECT_ROOT . '/src/Controllers/StoreController.php';
-// require_once PROJECT_ROOT . '/src/Repositories/StoreRepository.php';
-// require_once PROJECT_ROOT . '/src/Controllers/WeaponController.php';
-// require_once PROJECT_ROOT . '/src/Repositories/WeaponRepository.php';
-
-
-// // Load Utility Functions
-// require_once PROJECT_ROOT . '/src/Utils.php';

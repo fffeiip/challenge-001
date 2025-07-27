@@ -777,6 +777,11 @@ class WeaponValidator
             return;
         }
 
+        if ($price === '0' || $price === 0) {
+            $this->errors['price'] = 'Price cannot be 0.';
+            return;
+        }
+
         if (!is_numeric($price)) {
             $this->errors['price'] = 'Price must be a valid number.';
             return;
@@ -857,8 +862,8 @@ class WeaponValidator
 
 class CsvWeaponValidator
 {
-    private array $validStoreIds;
-    private array $errors = [];
+    private  $validStoreIds;
+    private  $errors = [];
     
     public function __construct(array $validStoreIds)
     {

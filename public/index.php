@@ -17,7 +17,7 @@ $actionName = $parts[1] ?? 'index';     // Default action
 $id = $parts[2] ?? null;                 // Optional ID parameter
 
 
-// Route to the correct controller
+// Route to the correct controller( made it simple since we dont have many controllers and actions)
 switch ($controllerName) {
     case 'stores':
         $controller = new StoreController();
@@ -37,7 +37,6 @@ switch ($controllerName) {
          elseif ($method === 'GET' && $actionName === 'show' && $id) {
             $controller->show($id); // URL: /stores/show/123
         }
-        // ... other actions like edit, update, delete will go here
         else {
             http_response_code(404);
             render('errors/404');
@@ -69,7 +68,6 @@ switch ($controllerName) {
         elseif ($method === 'POST' && $actionName === 'bulk-pdf') {
             $controller->bulkPdf(); // URL: /weapons/bulk-pdf (form submission)
         }
-            // NEW CSV ROUTES
         elseif ($method === 'GET' && $actionName === 'export-csv') {
             $controller->exportCsv(); // URL: /weapons/export-csv
         } elseif ($method === 'GET' && $actionName === 'import-csv') {
