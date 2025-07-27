@@ -102,6 +102,157 @@ class WeaponPDFGenerator extends TCPDF
     }
 
     /**
+     * Generate PDF content and return as string (for bulk export)
+     */
+    public function generateWeaponPDFContent($weapon, $store): string
+    {
+        // Set document information
+        $this->SetCreator('Weapon Management System');
+        $this->SetAuthor($store['name']);
+        $this->SetTitle('Weapon Details - ' . $weapon['name']);
+        $this->SetSubject('Weapon Information');
+        
+        // Set margins
+        $this->SetMargins(15, 27, 15);
+        $this->SetHeaderMargin(5);
+        $this->SetFooterMargin(10);
+        
+        // Set auto page breaks
+        $this->SetAutoPageBreak(TRUE, 25);
+        
+        // Add a page
+        $this->AddPage();
+        
+        // Set font
+        $this->SetFont('helvetica', '', 12);
+        
+        // Create HTML content
+        $html = $this->generateWeaponHTML($weapon, $store);
+        
+        // Print the HTML content
+        $this->writeHTML($html, true, false, true, false, '');
+        
+        // Return this as string
+        return $this->Output('', 'S');
+    }
+
+    /**
+     * Generate HTML content for the weapon PDF
+     */
+    private function generateWeaponHTML($weapon, $store): string
+    {
+        $html = '
+        <style>
+            body { font-family: Arial, sans-serif; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .store-info { background-color: #f5f5f5; padding: 15px; margin-bottom: 20px; }
+            .weapon-details { margin-bottom: 20px; }
+            .detail-row { margin-bottom: 10px; }
+            .label { font-weight: bold; color: #333; }
+            .value { color: #666; }
+            .status-badge { 
+                padding: 5px 10px; 
+                border-radius: 3px; 
+                color: white; 
+                font-weight: bold;
+                display: inline-block;
+            }
+            .status-active { background-color: #28a745; }
+            .status-sold { background-color: #dc3545; }
+            .status-pending { background-color: #ffc107; color: #000; }
+            .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; }
+        </style>
+        
+        <div class="header">
+            <h1>Weapon Details</h1>
+            <p>Generated on ' . date('F j, Y \a\t g:i A') . '</p>
+        </div>
+        
+        <div class="store-info">
+            <h2>Store Information</h2>
+            <div class="detail-row">
+                <span class="label">Store Name:</span> 
+                <span class="value">' . htmlspecialchars($store['name']) . '</span>
+            </div>';
+            
+        if (!empty($store['address'])) {
+            $html .= '
+            <div class="detail-row">
+                <span class="label">Address:</span> 
+                <span class="value">' . htmlspecialchars($store['address']) . '</span>
+            </div>';
+        }
+        
+        if (!empty($store['phone'])) {
+            $html .= '
+            <div class="detail-row">
+                <span class="label">Phone:</span> 
+                <span class="value">' . htmlspecialchars($store['phone']) . '</span>
+            </div>';
+        }
+        
+        if (!empty($store['email'])) {
+            $html .= '
+            <div class="detail-row">
+                <span class="label">Email:</span> 
+                <span class="value">' . htmlspecialchars($store['email']) . '</span>
+            </div>';
+        }
+        
+        $html .= '
+        </div>
+        
+        <div class="weapon-details">
+            <h2>Weapon Information</h2>
+            <div class="detail-row">
+                <span class="label">Name:</span> 
+                <span class="value">' . htmlspecialchars($weapon['name']) . '</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Type:</span> 
+                <span class="value">' . htmlspecialchars($weapon['type']) . '</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Caliber:</span> 
+                <span class="value">' . htmlspecialchars($weapon['caliber']) . '</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Serial Number:</span> 
+                <span class="value">' . htmlspecialchars($weapon['serial_number']) . '</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Price:</span> 
+                <span class="value">$' . number_format($weapon['price'], 2) . '</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">In Stock:</span> 
+                <span class="value">' . ($weapon['in_stock'] ? 'Yes' : 'No') . '</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Status:</span> 
+                <span class="status-badge status-' . strtolower($weapon['status']) . '">' . 
+                    ucfirst(htmlspecialchars($weapon['status'])) . '</span>
+            </div>';
+            
+        if (!empty($weapon['description'])) {
+            $html .= '
+            <div class="detail-row">
+                <span class="label">Description:</span><br>
+                <span class="value">' . nl2br(htmlspecialchars($weapon['description'])) . '</span>
+            </div>';
+        }
+        
+        $html .= '
+        </div>
+        
+        <div class="footer">
+            <p>This document was generated by the Weapon Management System</p>
+            <p>© ' . date('Y') . ' ' . htmlspecialchars($store['name']) . '</p>
+        </div>';
+        
+        return $html;
+    }
+    /**
      * Custom header
      */
     public function Header(): void

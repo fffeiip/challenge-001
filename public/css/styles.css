@@ -371,6 +371,77 @@ a:hover {
     color: #6c757d;
 }
 
+/* Additional CSS for better checkbox styling */
+.bulk-actions-section {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.bulk-actions-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.selection-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.selection-count {
+    font-size: 14px;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.bulk-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.form-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.table-data tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.table-data tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.table-data tbody tr:has(.weapon-checkbox:checked) {
+    background-color: #e3f2fd;
+}
+
+.actions {
+    white-space: nowrap;
+}
+
+.actions .btn {
+    margin-right: 5px;
+}
+
+.actions .btn:last-child {
+    margin-right: 0;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .filter-row {
@@ -393,6 +464,19 @@ a:hover {
     .table-data th,
     .table-data td {
         padding: 0.5rem;
+    }
+     .bulk-actions-controls {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .selection-controls {
+        justify-content: center;
+    }
+    
+    .bulk-buttons {
+        justify-content: center;
     }
 }
 

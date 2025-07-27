@@ -63,6 +63,9 @@ switch ($controllerName) {
          elseif ($method === 'GET' && $actionName === 'pdf' && $id) {
             $controller->pdf($id); // URL: /weapons/pdf/123
         }
+        elseif ($method === 'POST' && $actionName === 'bulk-pdf') {
+            $controller->bulkPdf(); // URL: /weapons/bulk-pdf (form submission)
+        }
          else {
             http_response_code(404);
             render('errors/404');

@@ -190,6 +190,202 @@ class WeaponController
         $pdfGenerator = new WeaponPDFGenerator();
         $pdfGenerator->generateWeaponPDF($weapon, $store);
     }
+
+    /**
+     * Bulk PDF export - generates a zip file containing individual weapon PDFs
+     */
+    public function bulkPdf(): void
+    {
+        // Check if weapon IDs were provided
+        if (empty($_POST['weapon_ids']) || !is_array($_POST['weapon_ids'])) {
+            setFlashMessage('error', 'No weapons selected for export.');
+            header('Location: /weapons/list');
+            exit();
+        }
+
+        $weaponIds = array_map('intval', $_POST['weapon_ids']);
+        
+        // Validate that we have valid IDs
+        if (empty($weaponIds)) {
+            setFlashMessage('error', 'Invalid weapon selection.');
+            header('Location: /weapons/list');
+            exit();
+        }
+
+        try {
+            // Create temporary directory for PDFs
+            $tempDir = sys_get_temp_dir() . '/weapon_pdfs_' . uniqid();
+            if (!mkdir($tempDir, 0755, true)) {
+                throw new Exception('Failed to create temporary directory');
+            }
+
+            $generatedFiles = [];
+            $failedWeapons = [];
+
+            foreach ($weaponIds as $weaponId) {
+                try {
+                    // Get weapon data
+                    $weapon = $this->weaponRepo->findById($weaponId);
+                    if (!$weapon) {
+                        $failedWeapons[] = "Weapon ID {$weaponId} not found";
+                        continue;
+                    }
+
+                    // Get store data
+                    $store = $this->storeRepo->findById($weapon['store_id']);
+                    if (!$store) {
+                        $failedWeapons[] = "Store not found for weapon: {$weapon['name']}";
+                        continue;
+                    }
+
+                    // Generate filename (sanitize for filesystem)
+                    $filename = $this->sanitizeFilename($weapon['name'] . '_' . $weapon['serial_number']) . '.pdf';
+                    $filepath = $tempDir . '/' . $filename;
+
+                    // Create a new PDF generator instance for each weapon
+                    $pdfGenerator = new WeaponPDFGenerator();
+                    
+                    // Generate PDF content using the working method from your WeaponPDFGenerator
+                    $pdfContent = $pdfGenerator->generateWeaponPDFContent($weapon, $store);
+                    
+                    if (file_put_contents($filepath, $pdfContent) === false) {
+                        $failedWeapons[] = "Failed to generate PDF for weapon: {$weapon['name']}";
+                        continue;
+                    }
+
+                    $generatedFiles[] = [
+                        'path' => $filepath,
+                        'name' => $filename
+                    ];
+
+                } catch (Exception $e) {
+                    $failedWeapons[] = "Error processing weapon ID {$weaponId}: " . $e->getMessage();
+                    continue;
+                }
+            }
+
+            // Check if we have any files to zip
+            if (empty($generatedFiles)) {
+                $this->cleanupTempDir($tempDir);
+                setFlashMessage('error', 'No PDFs could be generated. ' . implode(', ', $failedWeapons));
+                header('Location: /weapons/list');
+                exit();
+            }
+
+            // Create ZIP file
+            $zipFilename = 'weapons_export_' . date('Y-m-d_H-i-s') . '.zip';
+            $zipPath = $tempDir . '/' . $zipFilename;
+
+            if (!class_exists('ZipArchive')) {
+                throw new Exception('ZipArchive extension is not available');
+            }
+
+            $zip = new ZipArchive();
+            $result = $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+            
+            if ($result !== TRUE) {
+                $this->cleanupTempDir($tempDir);
+                throw new Exception('Cannot create ZIP file. Error code: ' . $result);
+            }
+
+            // Add files to ZIP
+            foreach ($generatedFiles as $file) {
+                if (!file_exists($file['path'])) {
+                    $failedWeapons[] = "File not found: {$file['name']}";
+                    continue;
+                }
+                
+                if (!$zip->addFile($file['path'], $file['name'])) {
+                    $failedWeapons[] = "Failed to add {$file['name']} to ZIP";
+                }
+            }
+
+            $zip->close();
+
+            // Check if ZIP was created successfully
+            if (!file_exists($zipPath) || filesize($zipPath) == 0) {
+                $this->cleanupTempDir($tempDir);
+                throw new Exception('ZIP file was not created successfully or is empty');
+            }
+
+            // Send ZIP file to browser
+            header('Content-Type: application/zip');
+            header('Content-Disposition: attachment; filename="' . $zipFilename . '"');
+            header('Content-Length: ' . filesize($zipPath));
+            header('Cache-Control: no-cache, must-revalidate');
+            header('Pragma: no-cache');
+
+            // Disable output buffering to prevent memory issues
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+
+            // Output the file
+            $handle = fopen($zipPath, 'rb');
+            if ($handle) {
+                while (!feof($handle)) {
+                    echo fread($handle, 8192);
+                    flush();
+                }
+                fclose($handle);
+            } else {
+                throw new Exception('Could not read ZIP file');
+            }
+
+            // Cleanup temporary files
+            $this->cleanupTempDir($tempDir);
+
+            exit();
+
+        } catch (Exception $e) {
+            // Cleanup on error
+            if (isset($tempDir)) {
+                $this->cleanupTempDir($tempDir);
+            }
+            
+            setFlashMessage('error', 'Error generating bulk PDF export: ' . $e->getMessage());
+            header('Location: /weapons/list');
+            exit();
+        }
+    }
+
+     /**
+     * Sanitize filename for filesystem compatibility
+     */
+    private function sanitizeFilename(string $filename): string
+    {
+        // Remove or replace invalid characters
+        $filename = preg_replace('/[^a-zA-Z0-9\-_\.]/', '_', $filename);
+        // Remove multiple underscores
+        $filename = preg_replace('/_+/', '_', $filename);
+        // Trim underscores from ends
+        $filename = trim($filename, '_');
+        // Limit length
+        return substr($filename, 0, 100);
+    }
+
+    /**
+     * Clean up temporary directory and all its contents
+     */
+    private function cleanupTempDir(string $tempDir): void
+    {
+        if (!is_dir($tempDir)) {
+            return;
+        }
+
+        try {
+            $files = glob($tempDir . '/*');
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
+            }
+            rmdir($tempDir);
+        } catch (Exception $e) {
+            // Log error but don't throw - this is cleanup
+            error_log("Failed to cleanup temp directory {$tempDir}: " . $e->getMessage());
+        }
+    }
 }
 
 
