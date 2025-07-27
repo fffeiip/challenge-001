@@ -69,6 +69,16 @@ switch ($controllerName) {
         elseif ($method === 'POST' && $actionName === 'bulk-pdf') {
             $controller->bulkPdf(); // URL: /weapons/bulk-pdf (form submission)
         }
+            // NEW CSV ROUTES
+        elseif ($method === 'GET' && $actionName === 'export-csv') {
+            $controller->exportCsv(); // URL: /weapons/export-csv
+        } elseif ($method === 'GET' && $actionName === 'import-csv') {
+            $controller->importCsvForm(); // URL: /weapons/import-csv
+        } elseif ($method === 'POST' && $actionName === 'import-csv') {
+            $controller->importCsv(); // URL: /weapons/import-csv (form submission)
+        } elseif ($method === 'GET' && $actionName === 'csv-template') {
+            $controller->downloadCsvTemplate(); // URL: /weapons/csv-template
+        } 
          else {
             http_response_code(404);
             render('errors/404');

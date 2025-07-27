@@ -32,7 +32,14 @@ function getPaginationUrl($page, $current_params) {
 
 <div class="page-header">
     <h1><?= e($title) ?></h1>
-    <a href="/weapons/create" class="btn btn-primary">Add New Weapon</a>
+    <div style="display: flex; gap: 10px;">
+        <a href="/weapons/create" class="btn btn-primary">Add New Weapon</a>
+        <div class="csv-actions">
+            <a href="/weapons/import-csv" class="btn btn-success">📥 Import CSV</a>
+            <a href="/weapons/export-csv<?= !empty($_GET) ? '?' . http_build_query($_GET) : '' ?>" class="btn btn-info">📤 Export CSV</a>
+        </div>
+    </div>
+    
 </div>
 
 <!-- Filters Section -->

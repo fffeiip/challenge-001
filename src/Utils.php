@@ -854,3 +854,214 @@ class WeaponValidator
 
 
 }
+
+class CsvWeaponValidator
+{
+    private array $validStoreIds;
+    private array $errors = [];
+    
+    public function __construct(array $validStoreIds)
+    {
+        $this->validStoreIds = $validStoreIds;
+    }
+    
+    /**
+     * Validate weapon data from CSV import
+     */
+    public function validateWeapon(array $data, int $lineNumber): array
+    {
+        $errors = [];
+
+        // Required fields validation
+        if (empty(trim($data['name'] ?? ''))) {
+            $errors[] = 'Name is required';
+        } elseif (strlen(trim($data['name'])) > 255) {
+            $errors[] = 'Name must be less than 255 characters';
+        }
+
+        if (empty(trim($data['serial_number'] ?? ''))) {
+            $errors[] = 'Serial number is required';
+        } elseif (strlen(trim($data['serial_number'])) > 100) {
+            $errors[] = 'Serial number must be less than 100 characters';
+        } elseif (!preg_match('/^[A-Za-z0-9\-_]+$/', trim($data['serial_number']))) {
+            $errors[] = 'Serial number can only contain letters, numbers, hyphens, and underscores';
+        }
+
+        // Type validation
+        if (!empty($data['type']) && strlen(trim($data['type'])) > 100) {
+            $errors[] = 'Type must be less than 100 characters';
+        }
+
+        // Caliber validation
+        if (!empty($data['caliber']) && strlen(trim($data['caliber'])) > 50) {
+            $errors[] = 'Caliber must be less than 50 characters';
+        }
+
+        // Price validation
+        $price = $data['price'] ?? 0;
+        if (!is_numeric($price)) {
+            $errors[] = 'Price must be a valid number';
+        } elseif ((float)$price < 0) {
+            $errors[] = 'Price cannot be negative';
+        } elseif ((float)$price > 999999.99) {
+            $errors[] = 'Price cannot exceed $999,999.99';
+        }
+
+        // Store ID validation
+        if (empty($data['store_id'])) {
+            $errors[] = 'Store ID is required';
+        } elseif (!is_numeric($data['store_id'])) {
+            $errors[] = 'Store ID must be a valid number';
+        } elseif (!in_array((int)$data['store_id'], $this->validStoreIds)) {
+            $errors[] = 'Store ID does not exist in the system';
+        }
+
+        // In stock validation
+        $inStock = $data['in_stock'] ?? 1;
+        if (!in_array($inStock, [0, 1, '0', '1'])) {
+            $errors[] = 'In stock must be 1 (yes) or 0 (no)';
+        }
+
+        // Status validation
+        $validStatuses = ['active', 'sold', 'discontinued'];
+        $status = strtolower(trim($data['status'] ?? 'active'));
+        if (!in_array($status, $validStatuses)) {
+            $errors[] = 'Status must be: ' . implode(', ', $validStatuses);
+        }
+
+        return [
+            'valid' => empty($errors),
+            'errors' => $errors,
+            'line' => $lineNumber
+        ];
+    }
+
+    /**
+     * Validate CSV file structure
+     */
+    public function validateCsvStructure(array $csvData, bool $hasHeaders = true): array
+    {
+        $errors = [];
+        
+        if (empty($csvData)) {
+            $errors[] = 'CSV file is empty';
+            return ['valid' => false, 'errors' => $errors];
+        }
+
+        // Expected columns
+        $expectedColumns = ['name', 'type', 'caliber', 'serial_number', 'price', 'store_id', 'in_stock', 'status'];
+        $minColumns = 4; // name, serial_number, price, store_id are minimum required
+
+        // Check first row (headers or data)
+        $firstRow = $csvData[0];
+        $columnCount = count($firstRow);
+
+        if ($columnCount < $minColumns) {
+            $errors[] = "CSV must have at least {$minColumns} columns";
+        }
+
+        if ($hasHeaders) {
+            // Validate header names if present
+            $headers = array_map('strtolower', array_map('trim', $firstRow));
+            $missingHeaders = [];
+            
+            foreach (['name', 'serial_number', 'price', 'store_id'] as $required) {
+                if (!in_array($required, $headers)) {
+                    $missingHeaders[] = $required;
+                }
+            }
+            
+            if (!empty($missingHeaders)) {
+                $errors[] = 'Missing required headers: ' . implode(', ', $missingHeaders);
+            }
+        }
+
+        // Check for consistent column count across rows
+        $inconsistentRows = [];
+        foreach ($csvData as $index => $row) {
+            if (count($row) !== $columnCount) {
+                $inconsistentRows[] = $index + 1;
+            }
+        }
+
+        if (!empty($inconsistentRows)) {
+            $errors[] = 'Inconsistent column count on lines: ' . implode(', ', array_slice($inconsistentRows, 0, 10));
+        }
+
+        return [
+            'valid' => empty($errors),
+            'errors' => $errors,
+            'column_count' => $columnCount,
+            'expected_columns' => $expectedColumns
+        ];
+    }
+
+    /**
+     * Clean and normalize weapon data
+     */
+    public function cleanWeaponData(array $data): array
+    {
+        return [
+            'name' => trim($data['name'] ?? ''),
+            'type' => trim($data['type'] ?? ''),
+            'caliber' => trim($data['caliber'] ?? ''),
+            'serial_number' => strtoupper(trim($data['serial_number'] ?? '')),
+            'price' => round((float)($data['price'] ?? 0), 2),
+            'store_id' => (int)($data['store_id'] ?? 0),
+            'in_stock' => (int)($data['in_stock'] ?? 1),
+            'status' => strtolower(trim($data['status'] ?? 'active'))
+        ];
+    }
+
+    /**
+     * Check for duplicate serial numbers within the CSV
+     */
+    public function findDuplicateSerialNumbers(array $weaponDataArray): array
+    {
+        $serialNumbers = [];
+        $duplicates = [];
+
+        foreach ($weaponDataArray as $index => $weapon) {
+            $serial = strtoupper(trim($weapon['serial_number'] ?? ''));
+            
+            if (empty($serial)) {
+                continue;
+            }
+
+            if (isset($serialNumbers[$serial])) {
+                if (!isset($duplicates[$serial])) {
+                    $duplicates[$serial] = [$serialNumbers[$serial]];
+                }
+                $duplicates[$serial][] = $index + 1;
+            } else {
+                $serialNumbers[$serial] = $index + 1;
+            }
+        }
+
+        return $duplicates;
+    }
+
+    /**
+     * Generate validation summary
+     */
+    public function generateValidationSummary(array $results): array
+    {
+        $summary = [
+            'total_rows' => count($results),
+            'valid_rows' => 0,
+            'invalid_rows' => 0,
+            'error_details' => []
+        ];
+
+        foreach ($results as $result) {
+            if ($result['valid']) {
+                $summary['valid_rows']++;
+            } else {
+                $summary['invalid_rows']++;
+                $summary['error_details'][] = "Line {$result['line']}: " . implode(', ', $result['errors']);
+            }
+        }
+
+        return $summary;
+    }
+}

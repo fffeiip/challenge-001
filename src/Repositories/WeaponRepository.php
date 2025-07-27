@@ -305,6 +305,16 @@ class WeaponRepository
         return $options;
     }
 
+    /**
+     * Find weapon by serial number
+     */
+    public function findBySerialNumber(string $serialNumber)
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM weapons WHERE serial_number = ?");
+        $stmt->execute([$serialNumber]);
+        return $stmt->fetch();
+    }
+
      
     private function validateSortColumn(string $column): string
     {
