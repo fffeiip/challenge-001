@@ -167,6 +167,42 @@ class StoreRepository
         return $stmt->execute([$id]);
     }
 
+     /**
+     * Search stores for autocomplete
+     */
+    public function searchStores(string $query, int $limit = 10): array
+    {
+        $limit = min(10, $limit); // enforce max 10
+        $sql = "SELECT id, name, 
+               CONCAT_WS(', ', address_line1, address_line2, city, state_region, country) AS address, 
+               phone 
+        FROM stores 
+        WHERE name LIKE :query OR
+              CONCAT_WS(' ', address_line1, address_line2, city, state_region, country) LIKE :query2
+        ORDER BY 
+            CASE 
+                WHEN name LIKE :exact_query THEN 1
+                WHEN name LIKE :starts_query THEN 2
+                ELSE 3
+            END,
+            name ASC
+        LIMIT $limit";
+
+        $stmt = $this->pdo->prepare($sql);
+        $searchTerm = '%' . $query . '%';
+        $exactTerm = $query . '%';
+        $startsTerm = $query . '%';
+
+        $stmt->bindValue(':query', $searchTerm, PDO::PARAM_STR);
+        $stmt->bindValue(':query2', $searchTerm, PDO::PARAM_STR);
+        $stmt->bindValue(':exact_query', $exactTerm, PDO::PARAM_STR);
+        $stmt->bindValue(':starts_query', $startsTerm, PDO::PARAM_STR);
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
     public function getFilterOptions(): array
     {
         $options = [];

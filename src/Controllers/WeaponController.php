@@ -192,6 +192,31 @@ class WeaponController
     }
 
     /**
+     * API endpoint for store autocomplete
+     */
+    public function storeAutocomplete(): void
+    {
+        header('Content-Type: application/json');
+        
+        if (!isset($_GET['query']) || strlen(trim($_GET['query'])) < 2) {
+            echo json_encode([]);
+            exit();
+        }
+        
+        $query = trim($_GET['query']);
+        $limit = min(10, (int)($_GET['limit'] ?? 10));
+        
+        try {
+            $stores = $this->storeRepo->searchStores($query, $limit);
+            echo json_encode($stores);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Search failed']);
+        }
+        exit();
+    }
+
+    /**
      * Bulk PDF export - generates a zip file containing individual weapon PDFs
      */
     public function bulkPdf(): void
