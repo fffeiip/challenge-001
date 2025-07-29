@@ -11,10 +11,10 @@ services:
       - ./public:/var/www/html
       - ./src:/var/www/src
     environment:
-      MYSQL_HOST: db
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
-      MYSQL_DATABASE: challenge_db
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_DATABASE: challenge_db
       # RUN_TESTS: "true"
     depends_on:
       db:
